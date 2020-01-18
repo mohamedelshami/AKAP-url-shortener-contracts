@@ -6,15 +6,16 @@ contract URLShortener {
 
     uint private _parentNodeId;
     address private _akapAddress;
+    bytes private _domain;
 
     constructor(address akapAddress, bytes memory domain, string memory tokenURI) public {
         _akapAddress = akapAddress;
+        _domain      = domain;
         AKAP akap = AKAP(_akapAddress);
 
-        _parentNodeId = akap.hashOf(0x0, domain);
+        _parentNodeId = akap.hashOf(0x0, _domain);
 
         akap.claim(0x0, domain);
-        akap.approve(msg.sender, _parentNodeId);
         akap.setTokenURI(_parentNodeId, tokenURI);
     }
 
@@ -40,6 +41,19 @@ contract URLShortener {
         return 0;
     }
 
+    /**
+    * @dev extends the claim on the parent re-issuing 'AKAP.claim' function
+    *
+    * See 'AKAP.claim' 'case 1'
+    **/
+    function reclaim() external returns (uint status){
+       AKAP akap = AKAP(_akapAddress);
+       return akap.claim(0x0, _domain);
+    }
+
+    /**
+    * returns the parent / root Id which is the hash of 0x0 and 'bytes' value of domain
+    **/
     function parentNodeId() public view returns (uint) {
         return _parentNodeId;
     }

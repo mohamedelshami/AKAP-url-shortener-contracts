@@ -11,7 +11,6 @@ contract("When testing AKAP URLShortener, it:", async accounts => {
        let parentNodeId = await shortener.parentNodeId();
 
        assert.equal(shortener.address, await akap.ownerOf(parentNodeId));
-       assert.equal(accounts[0], await akap.getApproved(parentNodeId));
        assert.equal("http://redir.eth", await akap.tokenURI(parentNodeId));
    });
 
@@ -44,6 +43,20 @@ contract("When testing AKAP URLShortener, it:", async accounts => {
         assert.equal(accounts[1], await akap.ownerOf(nodeId));
         assert.equal(0x102, await akap.nodeBody(nodeId));
      });
+
+     it("should be possible to extend parent/root node by non-owner ", async () => {
+         // This tests URL Shortener parent node can be extended by any account
+         const akap = await AKAP.deployed();
+         const shortener = await URLShortener.deployed();
+
+         let parentNodeId = await shortener.parentNodeId();
+         let expiry = await akap.expiryOf(parentNodeId);
+
+         await shortener.reclaim();
+
+         assert.equal(shortener.address, await akap.ownerOf(parentNodeId));
+         assert.isTrue(await akap.expiryOf(parentNodeId) > expiry);
+      });
 
 });
 
