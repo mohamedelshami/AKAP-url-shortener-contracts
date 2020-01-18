@@ -7,9 +7,15 @@ contract URLShortener {
     uint private _parentNodeId;
     address private _akapAddress;
 
-    constructor(address akapAddress, uint parentNodeId) public {
+    constructor(address akapAddress, bytes memory domain, string memory tokenURI) public {
         _akapAddress = akapAddress;
-        _parentNodeId = parentNodeId;
+        AKAP akap = AKAP(_akapAddress);
+
+        _parentNodeId = akap.hashOf(0x0, domain);
+
+        akap.claim(0x0, domain);
+        akap.approve(msg.sender, _parentNodeId);
+        akap.setTokenURI(_parentNodeId, tokenURI);
     }
 
     /**
@@ -27,10 +33,11 @@ contract URLShortener {
             uint nodeId = akap.hashOf(parentNodeId(), label);
             akap.setNodeBody(nodeId, body);
             akap.transferFrom(akap.ownerOf(nodeId), msg.sender, nodeId);
+            require(msg.sender == akap.ownerOf(nodeId));
             return 1;
         }
 
-        return (0);
+        return 0;
     }
 
     function parentNodeId() public view returns (uint) {

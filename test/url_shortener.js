@@ -10,8 +10,8 @@ contract("When testing AKAP URLShortener, it:", async accounts => {
 
        let parentNodeId = await shortener.parentNodeId();
 
-       assert.equal(shortener.address, await akap.getApproved(parentNodeId));
-       assert.equal(accounts[0], await akap.ownerOf(parentNodeId));
+       assert.equal(shortener.address, await akap.ownerOf(parentNodeId));
+       assert.equal(accounts[0], await akap.getApproved(parentNodeId));
        assert.equal("http://redir.eth", await akap.tokenURI(parentNodeId));
    });
 
