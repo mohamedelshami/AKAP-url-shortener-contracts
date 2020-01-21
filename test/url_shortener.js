@@ -3,7 +3,7 @@ const URLShortener = artifacts.require("URLShortener");
 
 contract("When testing AKAP URLShortener, it:", async accounts => {
 
-  it("deploy correctly and assigns a parent node via AKAP", async () => {
+  it("Should deploy correctly and claim a parent node via AKAP", async () => {
        // This tests AKAP is injected at deployment time and a parent node is assigned
        const akap = await AKAP.deployed();
        const shortener = await URLShortener.deployed();
@@ -11,10 +11,11 @@ contract("When testing AKAP URLShortener, it:", async accounts => {
        let parentNodeId = await shortener.parentNodeId();
 
        assert.equal(shortener.address, await akap.ownerOf(parentNodeId));
-       assert.equal("http://redir.eth", await akap.tokenURI(parentNodeId));
+       assert.equal(accounts[0], await akap.getApproved(parentNodeId));
+       assert.equal("https://redir.eth", await akap.tokenURI(parentNodeId));
    });
 
-   it("should claim a child node with a given label and node body content ", async () => {
+   it("Should claim a child node with a given label and node body content ", async () => {
        // This tests URL Shortener can claim a child node and assign the provided node label to the nodeId
        const akap = await AKAP.deployed();
        const shortener = await URLShortener.deployed();
@@ -28,7 +29,7 @@ contract("When testing AKAP URLShortener, it:", async accounts => {
        assert.equal(0x102, await akap.nodeBody(nodeId));
     });
 
-    it("shouldn't transfer an existing node to another owner ", async () => {
+    it("Shouldn't transfer an existing node to another owner ", async () => {
         // This tests URL Shortener won't transfer a pre-owned node. This
         // can be done directly in AKAP if needed.
         const akap = await AKAP.deployed();
@@ -44,7 +45,7 @@ contract("When testing AKAP URLShortener, it:", async accounts => {
         assert.equal(0x102, await akap.nodeBody(nodeId));
      });
 
-     it("should be possible to extend parent/root node by non-owner ", async () => {
+     it("Should be possible to extend parent/root node by non-owner ", async () => {
          // This tests URL Shortener parent node can be extended by any account
          const akap = await AKAP.deployed();
          const shortener = await URLShortener.deployed();

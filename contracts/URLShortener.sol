@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../../AKAP/contracts/AKAP.sol";
+import "../../AKAP/contracts/IAKAP.sol";
 
 contract URLShortener {
 
@@ -11,12 +11,13 @@ contract URLShortener {
     constructor(address akapAddress, bytes memory domain, string memory tokenURI) public {
         _akapAddress = akapAddress;
         _domain      = domain;
-        AKAP akap = AKAP(_akapAddress);
 
+        IAKAP akap = IAKAP(_akapAddress);
         _parentNodeId = akap.hashOf(0x0, _domain);
 
-        akap.claim(0x0, domain);
+        akap.claim(0x0, _domain);
         akap.setTokenURI(_parentNodeId, tokenURI);
+        akap.approve(msg.sender, _parentNodeId);
     }
 
     /**
@@ -27,14 +28,13 @@ contract URLShortener {
     * returns 1 if completed successfully otherwise 0
     */
     function claimAndSetNodeBody(bytes calldata label, bytes calldata body) external returns (uint success) {
-        AKAP akap = AKAP(_akapAddress);
+        IAKAP akap = IAKAP(_akapAddress);
         uint status = akap.claim(parentNodeId(), label);
 
         if (status != 0) {
             uint nodeId = akap.hashOf(parentNodeId(), label);
             akap.setNodeBody(nodeId, body);
             akap.transferFrom(akap.ownerOf(nodeId), msg.sender, nodeId);
-            require(msg.sender == akap.ownerOf(nodeId));
             return 1;
         }
 
@@ -47,15 +47,22 @@ contract URLShortener {
     * See 'AKAP.claim' 'case 1'
     **/
     function reclaim() external returns (uint status){
-       AKAP akap = AKAP(_akapAddress);
+       IAKAP akap = IAKAP(_akapAddress);
        return akap.claim(0x0, _domain);
     }
 
     /**
-    * returns the parent / root Id which is the hash of 0x0 and 'bytes' value of domain
+    * returns the parent 'root' Id which is the hash of 0x0 and 'bytes' value of domain
     **/
     function parentNodeId() public view returns (uint) {
         return _parentNodeId;
+    }
+
+    /**
+    * returns the domain of this URLShortener instance
+    **/
+    function getDomain() public view returns (bytes memory) {
+        return _domain;
     }
 
 }
